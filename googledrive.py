@@ -10,17 +10,20 @@ import requests
 import pandas as pd
 
 
-class Googledrive:
+class GoogleDrive:
     def __init__(self):
         self.id_file = ''
         self.url_file = f'https://drive.google.com/uc?id={self.id_file}'
         self.url_json = 'https://raw.githubusercontent.com/alermar69/python_lib/main/total-pier-309101-0350868dbf27.json?token=ADJ5RTD4H7S4XRDEUQRQUKDAMHLOM'
+
 
         r = requests.get(self.url_json)
         credentials = service_account.Credentials.from_service_account_info(r.json())
         self.service = build('drive', 'v3', credentials=credentials)
 
         self._get_data()
+
+        self.work_folder = self.df_main_folders['id'].iloc[0]
 
     def _get_data(self):
         results = self.service.files().list(
@@ -36,6 +39,7 @@ class Googledrive:
             results['files'] = results['files'] + nextPage['files']
 
         self.df = pd.DataFrame(results.get('files'))
+        self.df['parents1'] = self.df['parents'].apply(lambda x: x[0] if type(x) == list else x)
         self.df_main_folders = self.df.loc[(pd.isnull(self.df['parents'])) & (self.df['mimeType'] == 'application/vnd.google-apps.folder')]
         self.df_nomain_folders = self.df.loc[~pd.isnull(self.df['parents'])]
 
@@ -62,23 +66,25 @@ class Googledrive:
     def get_file(self, name, id_file=None):
         pass
 
-    def read_csv(self, name, id_file=None):
+    def read_csv(self, name_file=None, id_file=None):
         if id_file is None:
-            id_file = self.df_nomain_folders[self.df_nomain_folders['name'] == name]['id'].iloc[0]
+            id_file = self.df_nomain_folders[self.df_nomain_folders['name'] == name_file]['id'].iloc[0]
 
         url_file = f'https://drive.google.com/uc?id={id_file}'
         df = pd.read_csv(url_file)
         return df
 
-    def load_file(self, name):
-        results = self.service.files().list(
-            pageSize=10,
-            fields="nextPageToken, files(id, name, mimeType, parents, createdTime)",
-            q="'1uuecd6ndiZlj3d9dSVeZeKyEmEkC7qyr' in parents and name contains 'data'").execute()
+    def set_work_folder(self, name_folder=None, id_folder=None):
+        if id_folder is None:
+            if name_folder is None:
+                self.work_folder = self.df[(self.df['name'] == name_folder) & (self.df['mimeType'] == 'application/vnd.google-apps.folder')]['id'].iloc[0]
+        else:
+            self.work_folder = id_folder
 
-        file_id = results.get('files')[0].get('id')
-        request = self.service.files().get_media(fileId=file_id)
-        filename = 'german_credit_data1.csv'
+    def download_file(self, id_file):
+
+        request = self.service.files().get_media(fileId=id_file)
+        filename = 'tmp1.csv'
 
         with io.FileIO(filename, 'wb') as fh:
             downloader = MediaIoBaseDownload(fh, request)
@@ -86,3 +92,19 @@ class Googledrive:
             while done is False:
                 status, done = downloader.next_chunk()
                 print("Download %d%%." % int(status.progress() * 100))
+
+    def upload_file(self, file_path, name_file_new=None, folder_id=None):
+
+        if folder_id is None:
+            folder_id = self.work_folder
+
+        if name_file_new is None:
+            name_file_new = file_path
+
+        file_metadata = {
+            'name': name_file_new,
+            'parents': [folder_id]
+        }
+        media = MediaFileUpload(file_path, resumable=True)
+        r = self.service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        return r
