@@ -81,10 +81,12 @@ class GoogleDrive:
         else:
             self.work_folder = id_folder
 
-    def download_file(self, id_file):
+    def download_file(self, id_file, name_file=None):
 
         request = self.service.files().get_media(fileId=id_file)
-        filename = 'tmp1.csv'
+
+        if name_file is None:
+            filename = self.df[self.df['id'] == id_file]['name'].iloc[0]
 
         with io.FileIO(filename, 'wb') as fh:
             downloader = MediaIoBaseDownload(fh, request)
