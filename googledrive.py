@@ -11,14 +11,15 @@ import pandas as pd
 
 
 class GoogleDrive:
-    def __init__(self):
+    def __init__(self, client_secrets_path=None):
         self.id_file = ''
         self.url_file = f'https://drive.google.com/uc?id={self.id_file}'
-        self.url_json = 'https://raw.githubusercontent.com/alermar69/python_lib/main/total-pier-309101-0350868dbf27.json?token=ADJ5RTD4H7S4XRDEUQRQUKDAMHLOM'
 
+        path_json = 'c:/avid-grid-309317-687044cd90e9.json'
+        if client_secrets_path is not None:
+            path_json = client_secrets_path
 
-        r = requests.get(self.url_json)
-        credentials = service_account.Credentials.from_service_account_info(r.json())
+        credentials = service_account.Credentials.from_service_account_file(path_json)
         self.service = build('drive', 'v3', credentials=credentials)
 
         self._get_data()
