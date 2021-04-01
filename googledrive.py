@@ -97,7 +97,7 @@ class GoogleDrive:
         if id_folder is not None:
             self.work_folder = id_folder
 
-    def download_file(self, id_file=None, name_file=None, name_file_new=None):
+    def download_file(self, name_file=None, name_file_new=None, id_file=None):
 
         if name_file is not None:
             id_file = self.df_nomain_folders[self.df_nomain_folders['name'] == name_file]['id'].iloc[0]
