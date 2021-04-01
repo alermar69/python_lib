@@ -26,6 +26,9 @@ class GoogleDrive:
 
         self.work_folder = self.df_main_folders['id'].iloc[0]
 
+    def _get_id(self, url):
+        return url.split('/')[5]
+
     def _get_data(self):
         results = self.service.files().list(
             pageSize=10,
@@ -67,19 +70,25 @@ class GoogleDrive:
     def get_file(self, name, id_file=None):
         pass
 
-    def read_csv(self, name_file=None, id_file=None):
-        if id_file is None:
+    def read_csv(self, name_file=None, id_file=None, url_share=None):
+        if name_file is not None:
             id_file = self.df_nomain_folders[self.df_nomain_folders['name'] == name_file]['id'].iloc[0]
+
+        if url_share is not None:
+            id_file = self._get_id(url_share)
 
         url_file = f'https://drive.google.com/uc?id={id_file}'
         df = pd.read_csv(url_file)
         return df
 
-    def set_work_folder(self, name_folder=None, id_folder=None):
-        if id_folder is None:
-            if name_folder is None:
-                self.work_folder = self.df[(self.df['name'] == name_folder) & (self.df['mimeType'] == 'application/vnd.google-apps.folder')]['id'].iloc[0]
-        else:
+    def set_work_folder(self, name_folder=None, id_folder=None, url_share=None):
+        if name_folder is not None:
+            self.work_folder = self.df[(self.df['name'] == name_folder) & (self.df['mimeType'] == 'application/vnd.google-apps.folder')]['id'].iloc[0]
+
+        if url_share is not None:
+            id_folder = self._get_id(url_share)
+
+        if id_folder is not None:
             self.work_folder = id_folder
 
     def download_file(self, id_file, name_file=None):
