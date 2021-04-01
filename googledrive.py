@@ -83,9 +83,12 @@ class GoogleDrive:
         if url_share is not None:
             id_file = self._get_id(url_share)
 
-        url_file = f'https://drive.google.com/uc?id={id_file}'
-        df = pd.read_csv(url_file)
-        return df
+        if id_file is not None:
+            url_file = f'https://drive.google.com/uc?id={id_file}'
+            df = pd.read_csv(url_file)
+            return df
+
+        return
 
     def set_work_folder(self, name_folder=None, id_folder=None, url_share=None):
         if name_folder is not None:
@@ -115,6 +118,7 @@ class GoogleDrive:
                 while done is False:
                     status, done = downloader.next_chunk()
                     print("Download %d%%." % int(status.progress() * 100))
+                self._get_data()
 
     def upload_file(self, file_path, name_file_new=None, folder_id=None):
 
