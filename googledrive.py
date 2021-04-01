@@ -97,19 +97,24 @@ class GoogleDrive:
         if id_folder is not None:
             self.work_folder = id_folder
 
-    def download_file(self, id_file, name_file=None):
+    def download_file(self, id_file=None, name_file=None, name_file_new=None):
 
-        request = self.service.files().get_media(fileId=id_file)
+        if name_file is not None:
+            id_file = self.df_nomain_folders[self.df_nomain_folders['name'] == name_file]['id'].iloc[0]
 
-        if name_file is None:
+        if id_file is not None:
+            request = self.service.files().get_media(fileId=id_file)
+
             filename = self.df[self.df['id'] == id_file]['name'].iloc[0]
+            if name_file_new is not None:
+                filename = name_file_new
 
-        with io.FileIO(filename, 'wb') as fh:
-            downloader = MediaIoBaseDownload(fh, request)
-            done = False
-            while done is False:
-                status, done = downloader.next_chunk()
-                print("Download %d%%." % int(status.progress() * 100))
+            with io.FileIO(filename, 'wb') as fh:
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while done is False:
+                    status, done = downloader.next_chunk()
+                    print("Download %d%%." % int(status.progress() * 100))
 
     def upload_file(self, file_path, name_file_new=None, folder_id=None):
 
