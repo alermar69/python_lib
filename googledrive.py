@@ -3,6 +3,7 @@ from googleapiclient.http import MediaIoBaseDownload,MediaFileUpload
 from googleapiclient.discovery import build
 import pprint
 import io
+import os.path
 
 import gdown
 import requests
@@ -15,7 +16,12 @@ class GoogleDrive:
         self.id_file = ''
         self.url_file = f'https://drive.google.com/uc?id={self.id_file}'
 
-        path_json = 'c:/avid-grid-309317-687044cd90e9.json'
+        if os.path.isfile('c:/avid-grid-309317-687044cd90e9.json'):
+            path_json = 'c:/avid-grid-309317-687044cd90e9.json'
+
+        if os.path.isfile('avid-grid-309317-687044cd90e9.json'):
+            path_json = 'avid-grid-309317-687044cd90e9.json'
+
         if client_secrets_path is not None:
             path_json = client_secrets_path
 
